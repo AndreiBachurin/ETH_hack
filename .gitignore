@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+
+# Private stuff
+client/.env
+contracts/.env
+
+# Contracts
+contracts/cache/
+contracts/node_modules/
+contracts/.openzeppelin/
+
+# Client
+client/node_modules/
+client/src/gamedata/deploy.local.json
+.env
