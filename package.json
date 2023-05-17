@@ -10,7 +10,7 @@
   "dependencies": {
     "@truffle/interface-adapter": "^0.5.32",
     "get-random-values": "^2.1.0",
-    "highlight.js": "^10.7.2-local",
+    "highlight.js": "^11.8.0",
     "react-loader-spinner": "^5.3.4"
   },
   "resolutions": {
