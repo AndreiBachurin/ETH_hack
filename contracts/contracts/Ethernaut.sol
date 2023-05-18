@@ -2,8 +2,14 @@
 
 pragma solidity ^0.8.0;
 
-import "./levels/base/Level.sol";
-import "openzeppelin-contracts-08/access/Ownable.sol";
+interface ILevel {
+    function createInstance(address _player) external payable returns (address);
+
+    function validateInstance(
+        address payable _instance,
+        address _player
+    ) external returns (bool);
+}
 
 interface IStatistics {
     function saveNewLevel(address level) external;
@@ -27,7 +33,11 @@ interface IStatistics {
     ) external;
 }
 
-contract Ethernaut is Ownable {
+contract Ethernaut {
+
+    address owner = 0xFd07850DF7036ba07eFB2De6229460e7E1c82355;
+    bool public isStart;
+
     IStatistics public statistics;
 
     // ----------------------------------
@@ -38,10 +48,24 @@ contract Ethernaut is Ownable {
     mapping(address => string) public playersName;
     mapping(address => string) public playersTG;
 
+    modifier onlyOwner() {
+        require(msg.sender == owner, "You are not the owner");
+        _;
+    }
+
+    modifier notPaused() {
+        require(isStart, "CTF not yet start");
+        _;
+    }
+
+    function setStart() public onlyOwner {
+        isStart = !isStart;
+    }
+
     // Only registered levels will be allowed to generate and validate level instances.
-    function registerLevel(Level _level) public onlyOwner {
-        registeredLevels[address(_level)] = true;
-        statistics.saveNewLevel(address(_level));
+    function registerLevel(address _level) public onlyOwner {
+        registeredLevels[_level] = true;
+        statistics.saveNewLevel(_level);
     }
 
     function setStatistics(address _statProxy) external onlyOwner {
@@ -54,25 +78,39 @@ contract Ethernaut is Ownable {
 
     struct EmittedInstanceData {
         address player;
-        Level level;
+        ILevel level;
         bool completed;
     }
 
     mapping(address => EmittedInstanceData) public emittedInstances;
 
-  event LevelInstanceCreatedLog(address indexed player, address instance, string nickname);
-  event LevelCompletedLog(address indexed player, Level level, string nickname);
+    event LevelInstanceCreatedLog(
+        address indexed player,
+        address instance,
+        string nickname
+    );
+    event LevelCompletedLog(
+        address indexed player,
+        ILevel level,
+        string nickname
+    );
 
-  function register(string memory _nickname, string memory _tg) public returns(bool) {
-    if(bytes(_nickname).length > 0 && bytes(playersName[msg.sender]).length == 0) {
-      playersName[msg.sender] = _nickname;
-      playersTG[msg.sender] = _tg;
-      return true;
+    function register(
+        string memory _nickname,
+        string memory _tg
+    ) public returns (bool) {
+        if (
+            bytes(_nickname).length > 0 &&
+            bytes(playersName[msg.sender]).length == 0
+        ) {
+            playersName[msg.sender] = _nickname;
+            playersTG[msg.sender] = _tg;
+            return true;
+        }
+        return false;
     }
-    return false;
-  }
 
-    function createLevelInstance(Level _level) public payable {
+    function createLevelInstance(ILevel _level) public payable notPaused {
         // Ensure level is registered.
         require(registeredLevels[address(_level)], "This level doesn't exists");
 
@@ -89,10 +127,14 @@ contract Ethernaut is Ownable {
         statistics.createNewInstance(instance, address(_level), msg.sender);
 
         // Retrieve created instance via logs.
-        emit LevelInstanceCreatedLog(msg.sender, instance, playersName[msg.sender]);
+        emit LevelInstanceCreatedLog(
+            msg.sender,
+            instance,
+            playersName[msg.sender]
+        );
     }
 
-    function submitLevelInstance(address payable _instance) public {
+    function submitLevelInstance(address payable _instance) public notPaused {
         // Get player and level.
         EmittedInstanceData storage data = emittedInstances[_instance];
         require(
@@ -112,7 +154,11 @@ contract Ethernaut is Ownable {
                 msg.sender
             );
             // Notify success via logs.
-            emit LevelCompletedLog(msg.sender, data.level, playersName[msg.sender]);
+            emit LevelCompletedLog(
+                msg.sender,
+                data.level,
+                playersName[msg.sender]
+            );
         } else {
             statistics.submitFailure(
                 _instance,

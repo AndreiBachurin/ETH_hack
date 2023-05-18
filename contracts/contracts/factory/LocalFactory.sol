@@ -32,14 +32,14 @@ contract Factory is Ownable {
     }
 
     // use this function to register a level since this address is the owner of ethernaut
-    function registerLevel(Level _level) public onlyOwner {
+    function registerLevel(address _level) public onlyOwner {
         ethernaut.registerLevel(_level);
     }
 
     // use this function to transfer the ownership of the ethernaut contract to a new user(ethernaut?)
-    function transferContractsOwnership(address _newOwner) public onlyOwner {
-        ethernaut.transferOwnership(_newOwner);
-        proxyAdmin.transferOwnership(_newOwner);
-        transferOwnership(_newOwner);
-    }
+    // function transferContractsOwnership(address _newOwner) public onlyOwner {
+    //     ethernaut.transferOwnership(_newOwner);
+    //     proxyAdmin.transferOwnership(_newOwner);
+    //     transferOwnership(_newOwner);
+    // }
 }

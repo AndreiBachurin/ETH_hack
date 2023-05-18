@@ -7,20 +7,29 @@ var levels = require(`../gamedata/gamedata.json`).levels;
 export const getLevelDetailsByAddress = (levelAddress, chainId) => {
     const constants = require("../constants");
     const allLevels = require("client/src/gamedata/gamedata.json").levels;
+
     // If we are on a predeployed chain, fetch address from constants
     const gamedata = onPredeployedNetwork(chainId)
-    ? require(`client/src/gamedata/deploy.${constants.ID_TO_NETWORK[chainId]}.json`)
-    : restoreContract("77");
+        ? require(`client/src/gamedata/deploy.${constants.ID_TO_NETWORK[chainId]}.json`)
+        : restoreContract("77");
+
+console.log("gamedata: ", gamedata)
+console.log("levelAddress: ", levelAddress)
+
     // If we are not fetch from localstorage
     // based on the index fetch the level name and difficulty
     const addressToId = Object.fromEntries(
-      Object.entries(gamedata).map((a) => a.reverse())
+        Object.entries(gamedata).map((a) => a.reverse())
     );
-    const levelId = addressToId[levelAddress];
-    const currentLevel = allLevels[levelId];
+    const levelId = addressToId[levelAddress]; // массив addressToId начинается с индекса 1
+
+    const currentLevel = allLevels[levelId - 1]; // массив allLevels начинается с индекса 0
+    const currentLevelnew = allLevels.filter(level => level.deployId == levelId);
+    console.log("currentLevel: ", currentLevel[0])
+
     // include the difficulty circles to give more context
     const difficultyCircles = drawDifficultyCircle(currentLevel?.difficulty)
-    return {...currentLevel, difficultyCircles};
+    return { ...currentLevel, difficultyCircles };
 };
 
 export const drawDifficultyCircle = (levelDifficulty) => {
@@ -31,11 +40,11 @@ export const drawDifficultyCircle = (levelDifficulty) => {
     var fullCircle = "●";
     var difficulty = "";
     for (var j = 0; j < numberOfFullCircles; j++) {
-      difficulty += fullCircle;
+        difficulty += fullCircle;
     }
-  
+
     for (var k = 0; k < numberOfEmptyCircles; k++) {
-      difficulty += emptyCircle;
+        difficulty += emptyCircle;
     }
 
     return difficulty;
@@ -46,6 +55,8 @@ const getlevelsdata = (props, source) => {
     let linkStyle = {};
     let levelComplete;
     let selectedIndex;
+
+    console.log("level props: ", props)
 
     for (var i = 0; i < levels.length; i++) {
         var difficulty = drawDifficultyCircle(levels[i].difficulty);
@@ -83,14 +94,14 @@ const getlevelsdata = (props, source) => {
             ) : (
                 isMissingPNGImage ? (
                     source !== 'mosaic' ?
-                    `../../imgs/BigLevel${levels[i].deployId}.webm` :
-                    `../../imgs/Level${levels[i].deployId}.webm`
+                        `../../imgs/BigLevel${levels[i].deployId}.webm` :
+                        `../../imgs/Level${levels[i].deployId}.webm`
                 ) : (
                     source !== 'mosaic' ?
-                    `../../imgs/BigLevel${levels[i].deployId}.png` :
-                    `../../imgs/Level${levels[i].deployId}.png`
+                        `../../imgs/BigLevel${levels[i].deployId}.png` :
+                        `../../imgs/Level${levels[i].deployId}.png`
                 )
-                
+
             ),
             difficulty: difficulty,
             deployedAddress: levels[i].deployedAddress,

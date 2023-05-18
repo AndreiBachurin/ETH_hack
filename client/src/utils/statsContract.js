@@ -11,10 +11,15 @@ export const getLevelsSolvedByPlayer = async (playerAddress, networkId) => {
     const levelAddresses = getLevelAddressesInNetwork(networkId)
     const proxyStatsAddress = getProxyStatsContractAddressInNetwork(networkId)
     const statsContract = await getStatsContract(proxyStatsAddress, playerAddress)
+
     const listOfLevelsSolved = await getListOfLevelsSolvedByPlayer(statsContract, levelAddresses, playerAddress, 5)
+    console.log("listOfLevelsSolved: ", listOfLevelsSolved)
     const levelDetails = listOfLevelsSolved.map(oneLevel => {
+        console.log("oneLevel: ", oneLevel)
+
         return getLevelDetailsByAddress(oneLevel, networkId);
     });
+    console.log("levelDetails: ", levelDetails[0])
 
     return levelDetails
 }
